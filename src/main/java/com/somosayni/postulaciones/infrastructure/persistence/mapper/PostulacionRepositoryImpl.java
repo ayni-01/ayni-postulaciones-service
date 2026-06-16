@@ -20,7 +20,17 @@ public class PostulacionRepositoryImpl implements PostulacionRepository {
     public List<Postulacion> findAll() { return jpaRepository.findAll().stream().map(PostulacionEntity::toDomain).toList(); }
 
     @Override
-    public Postulacion save(Postulacion p) { return jpaRepository.save(PostulacionEntity.fromDomain(p)).toDomain(); }
+    public Postulacion save(Postulacion p) {
+        if (p.getId() != null) {
+            return jpaRepository.findById(p.getId())
+                .map(entity -> {
+                    entity.setEstado(p.getEstado());
+                    return jpaRepository.save(entity).toDomain();
+                })
+                .orElseGet(() -> jpaRepository.save(PostulacionEntity.fromDomain(p)).toDomain());
+        }
+        return jpaRepository.save(PostulacionEntity.fromDomain(p)).toDomain();
+    }
 
     @Override
     public void deleteById(String id) { jpaRepository.deleteById(id); }
